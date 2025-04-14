@@ -1,6 +1,6 @@
 services:
   worker-manager:
-    image: ghcr.io/agentifyme/worker-manager:0.1
+    image: ghcr.io/agentifyme/worker-manager:0.2
     container_name: agnt5-worker-manager
     pull_policy: always
     restart: unless-stopped
@@ -9,6 +9,30 @@ services:
       - .env
     environment:
       - SERVICE_NAME=agentifyme-worker-manager
+      - BUILDKIT_HOST=tcp://buildkit:1234
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./config.toml:/etc/agentifyme/nodemanager.toml
+    networks:
+      - agnt5_data_plane
+
+  buildkit:
+    image: moby/buildkit:latest
+    container_name: buildkit
+    privileged: true
+    expose:
+      - 1234
+    command:
+      - --addr
+      - tcp://0.0.0.0:1234
+    volumes:
+      - buildkit-data:/var/lib/buildkit
+    networks:
+      - agnt5_data_plane
+
+networks:
+  agnt5_data_plane:
+    driver: bridge
+
+volumes:
+  buildkit-data:
